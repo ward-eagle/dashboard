@@ -119,6 +119,30 @@
     #new-message-alert button:hover {
       background: #e0e0e0;
     }
+
+    /* Online users counter styles */
+    #online-counter {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #4a90e2;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 9999;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #online-counter:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
@@ -128,82 +152,98 @@
     <button onclick="logout()">Logout</button>
   </div>
 
+  <!-- Online Users Counter -->
+  <div id="online-counter">
+    👥 Online: <span id="online-count">0</span>
+  </div>
+
   <script>
-  if (localStorage.getItem("isLoggedIn") !== "true") {
-    window.location.href = "login.html";
-  }
-
-  function logout() {
-    localStorage.removeItem("isLoggedIn");
-    window.location.href = "login.html";
-  }
-
-  let previousMessageCount = 0;
-
-  function showNewMessageAlert() {
-    if (document.getElementById("new-message-alert")) return;
-
-    const alertBox = document.createElement("div");
-    alertBox.id = "new-message-alert";
-    alertBox.innerHTML = `
-      <span>📬 رسالة جديدة وصلت</span>
-      <button onclick="document.getElementById('new-message-alert').remove()">X</button>
-    `;
-    document.body.appendChild(alertBox);
-
-    // Auto hide after 5s
-    setTimeout(() => {
-      const el = document.getElementById("new-message-alert");
-      if (el) el.remove();
-    }, 5000);
-  }
-
-  async function loadMessages() {
-    try {
-      const res = await fetch("https://dallahchat.onrender.com/api/messages");
-      const messages = await res.json();
-      const messagesDiv = document.getElementById("messages");
-
-      // If new messages arrived
-      if (messages.length > previousMessageCount) {
-        showNewMessageAlert();
-
-        // Render only new ones
-        const newMessages = messages.slice(previousMessageCount);
-        newMessages.forEach((msg) => {
-          const div = document.createElement("div");
-          div.classList.add("message");
-
-          const timeDiv = document.createElement("div");
-          timeDiv.classList.add("message-time");
-          timeDiv.textContent = `[${msg.time || "🕒"}]`;
-
-          const textDiv = document.createElement("div");
-          textDiv.classList.add("message-text");
-
-          const lines = msg.text.split(/[,;\n]+/).map(line => line.trim()).filter(Boolean);
-          lines.forEach(line => {
-            const lineDiv = document.createElement("div");
-            lineDiv.textContent = line;
-            textDiv.appendChild(lineDiv);
-          });
-
-          div.appendChild(timeDiv);
-          div.appendChild(textDiv);
-          messagesDiv.appendChild(div);
-        });
-      }
-
-      previousMessageCount = messages.length;
-    } catch (err) {
-      console.error("❌ Failed to load messages", err);
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "login.html";
     }
-  }
 
-  // Refresh every 2s
-  setInterval(loadMessages, 2000);
-  loadMessages();
-</script>
+    function logout() {
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = "login.html";
+    }
 
+    let previousMessageCount = 0;
+    const API_BASE = "https://dashboard-xwzz.onrender.com";
+
+    function showNewMessageAlert() {
+      if (document.getElementById("new-message-alert")) return;
+
+      const alertBox = document.createElement("div");
+      alertBox.id = "new-message-alert";
+      alertBox.innerHTML = `
+        <span>📬 رسالة جديدة وصلت</span>
+        <button onclick="document.getElementById('new-message-alert').remove()">X</button>
+      `;
+      document.body.appendChild(alertBox);
+
+      // Auto hide after 5s
+      setTimeout(() => {
+        const el = document.getElementById("new-message-alert");
+        if (el) el.remove();
+      }, 5000);
+    }
+
+    async function loadMessages() {
+      try {
+        const res = await fetch(`${API_BASE}/api/messages`);
+        const messages = await res.json();
+        const messagesDiv = document.getElementById("messages");
+
+        if (messages.length > previousMessageCount) {
+          showNewMessageAlert();
+          const newMessages = messages.slice(previousMessageCount);
+          newMessages.forEach((msg) => {
+            const div = document.createElement("div");
+            div.classList.add("message");
+
+            const timeDiv = document.createElement("div");
+            timeDiv.classList.add("message-time");
+            timeDiv.textContent = `[${msg.time || "🕒"}]`;
+
+            const textDiv = document.createElement("div");
+            textDiv.classList.add("message-text");
+
+            const lines = msg.text.split(/[,;\n]+/).map(line => line.trim()).filter(Boolean);
+            lines.forEach(line => {
+              const lineDiv = document.createElement("div");
+              lineDiv.textContent = line;
+              textDiv.appendChild(lineDiv);
+            });
+
+            div.appendChild(timeDiv);
+            div.appendChild(textDiv);
+            messagesDiv.appendChild(div);
+          });
+        }
+
+        previousMessageCount = messages.length;
+      } catch (err) {
+        console.error("❌ Failed to load messages", err);
+      }
+    }
+
+    async function updateOnlineCount() {
+      try {
+        const res = await fetch(`${API_BASE}/online-users`);
+        const data = await res.json();
+        document.getElementById("online-count").textContent = data.online || 0;
+      } catch (err) {
+        console.error("❌ Failed to update online users", err);
+      }
+    }
+
+    // Refresh messages every 2s
+    setInterval(loadMessages, 2000);
+    loadMessages();
+
+    // Refresh online counter every 2s
+    setInterval(updateOnlineCount, 2000);
+    updateOnlineCount();
+  </script>
 </body>
 </html>

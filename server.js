@@ -64,31 +64,35 @@ app.post('/api/messages', (req, res) => {
   messages.push(newMessage);
   writeMessages(messages);
 
+  // Email removed
+
   res.status(201).json(newMessage);
 });
 
+/* --------------------- ONLINE USERS --------------------- */
+// Client should send { id: "uniqueUserId" } in body
 app.post('/track-online', (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  activeUsers.set(ip, Date.now());
+  const id = req.body.id || (req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(',')[0].trim();
+  activeUsers.set(id, Date.now());
   res.sendStatus(200);
 });
 
 app.get('/online-users', (req, res) => {
   const now = Date.now();
-  const ACTIVE_WINDOW = 30000; // 30 seconds
+  const ACTIVE_WINDOW = 10000; // 10 seconds for reliable ping
 
-  let count = 0;
-  for (let [ip, lastSeen] of activeUsers.entries()) {
-    if (now - lastSeen < ACTIVE_WINDOW) {
-      count++;
-    } else {
-      activeUsers.delete(ip); // Remove inactive
+  // Remove inactive users
+  for (let [id, lastSeen] of activeUsers.entries()) {
+    if (now - lastSeen > ACTIVE_WINDOW) {
+      activeUsers.delete(id);
     }
   }
 
-  res.json({ online: count });
+  // Count active users
+  res.json({ online: activeUsers.size });
 });
+/* -------------------------------------------------------- */
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running at port ${PORT}`);
+  console.log(`✅ Server running at https://dashboard-xwzz.onrender.com (port ${PORT})`);
 });
