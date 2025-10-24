@@ -94,5 +94,5 @@ app.get('/online-users', (req, res) => {
 /* -------------------------------------------------------- */
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running at https://dashboard-xwzz.onrender.com (port ${PORT})`);
+  console.log(`✅ Server running at https://dashboard-nrc2.onrender.com (port ${PORT})`);
 });
