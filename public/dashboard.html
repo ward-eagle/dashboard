@@ -8,16 +8,16 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f6f8;
+      background: #f4f6f8;
     }
 
     .dashboard-container {
-      max-width: 800px;
+      max-width: 900px;
       margin: 50px auto;
-      background-color: white;
+      background: #fff;
       padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
     }
 
     h2 {
@@ -29,7 +29,7 @@
     }
 
     .messages {
-      max-height: 400px;
+      max-height: 500px;
       overflow-y: auto;
       padding-right: 10px;
       margin-bottom: 20px;
@@ -39,10 +39,11 @@
     }
 
     .message {
-      background: linear-gradient(145deg, #ffffff, #e6e9f0);
+      position: relative;
+      background: linear-gradient(145deg, #fff, #e6e9f0);
       border-radius: 12px;
       padding: 20px 24px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       color: #2c3e50;
       font-size: 16px;
       border-left: 6px solid #4a90e2;
@@ -51,17 +52,9 @@
     }
 
     .message:hover {
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
       transform: translateY(-2px);
       background: linear-gradient(145deg, #f5f7fb, #dbe3f0);
-    }
-
-    .message-time {
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: #1a237e;
-      font-size: 14px;
-      letter-spacing: 0.02em;
     }
 
     .message-text {
@@ -71,179 +64,148 @@
       white-space: pre-line;
     }
 
-    button {
-      background-color: #e74c3c;
-      color: white;
-      padding: 12px 18px;
+    button.logout-btn {
+      padding: 12px 20px;
+      font-size: 16px;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      transition: background-color 0.3s ease, box-shadow 0.2s ease;
-      box-shadow: 0 4px 10px rgba(231, 76, 60, 0.6);
-    }
-
-    button:hover {
-      background-color: #c0392b;
-      box-shadow: 0 6px 14px rgba(192, 57, 43, 0.7);
-    }
-
-    /* New message alert styles */
-    #new-message-alert {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #4CAF50;
-      color: #fff;
-      padding: 14px 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    #new-message-alert button {
-      background: #fff;
-      color: #4CAF50;
-      padding: 4px 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: none;
-    }
-
-    #new-message-alert button:hover {
-      background: #e0e0e0;
-    }
-
-    /* Online users counter styles */
-    #online-counter {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: #4a90e2;
+      background: #667eea;
       color: white;
-      padding: 10px 18px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      font-weight: bold;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 9999;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
 
-    #online-counter:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    button.logout-btn:hover {
+      background: #5563c1;
+      transform: scale(1.03);
     }
+
+    
   </style>
 </head>
 <body>
   <div class="dashboard-container">
     <h2>Live Messages</h2>
+
+    <button id="enableSoundBtn" style="
+  margin-bottom:15px;
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  background:#27ae60;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+">
+  🔊 Enable Notification Sound
+</button>
+
     <div id="messages" class="messages"></div>
-    <button onclick="logout()">Logout</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 
-  <!-- Online Users Counter -->
-  <div id="online-counter">
-    👥 Online: <span id="online-count">0</span>
-  </div>
+  <!-- New message sound -->
+  <audio id="newMessageSound" preload="auto">
+  <source src="/sounds/mixkit-bell-notification-933.wav" type="audio/wav">
+</audio>
 
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    if (localStorage.getItem("isLoggedIn") !== "true") {
-      window.location.href = "login.html";
-    }
+if (localStorage.getItem("isLoggedIn") !== "true") {
+  window.location.href = "login.html";
+}
 
-    function logout() {
-      localStorage.removeItem("isLoggedIn");
-      window.location.href = "login.html";
-    }
+const API_BASE = "https://dashboard-584p.onrender.com";
 
-    let previousMessageCount = 0;
-    const API_BASE = "https://dashboard-nrc2.onrender.com";
+let lastMessageSignature = null;
+let soundUnlocked = false;
 
-    function showNewMessageAlert() {
-      if (document.getElementById("new-message-alert")) return;
+const messagesDiv = document.getElementById("messages");
+const newMessageSound = document.getElementById("newMessageSound");
+const enableBtn = document.getElementById("enableSoundBtn");
 
-      const alertBox = document.createElement("div");
-      alertBox.id = "new-message-alert";
-      alertBox.innerHTML = `
-        <span>📬 رسالة جديدة وصلت</span>
-        <button onclick="document.getElementById('new-message-alert').remove()">X</button>
-      `;
-      document.body.appendChild(alertBox);
+/* =========================================
+   🔓 Manual Sound Unlock (Guaranteed)
+========================================= */
+enableBtn.addEventListener("click", async () => {
+  try {
+    await newMessageSound.play();
+    newMessageSound.pause();
+    newMessageSound.currentTime = 0;
+    soundUnlocked = true;
+    enableBtn.style.display = "none";
+    console.log("✅ Sound Enabled");
+  } catch (err) {
+    console.error("Unlock failed:", err);
+  }
+});
 
-      // Auto hide after 5s
+/* =========================================
+   📩 Load Messages
+========================================= */
+async function loadMessages() {
+  try {
+    const res = await fetch(`${API_BASE}/api/messages`);
+    const messages = await res.json();
+
+    if (!messages || messages.length === 0) return;
+
+    const latest = messages[messages.length - 1];
+    const currentSignature = (latest.text || "") + (latest.time || "");
+
+    if (lastMessageSignature && currentSignature !== lastMessageSignature) {
+
+      if (soundUnlocked) {
+        newMessageSound.currentTime = 0;
+        newMessageSound.play().catch(() => {});
+      }
+
+      document.title = "🆕 New Message!";
       setTimeout(() => {
-        const el = document.getElementById("new-message-alert");
-        if (el) el.remove();
-      }, 5000);
+        document.title = "Admin Dashboard";
+      }, 3000);
     }
 
-    async function loadMessages() {
-      try {
-        const res = await fetch(`${API_BASE}/api/messages`);
-        const messages = await res.json();
-        const messagesDiv = document.getElementById("messages");
+    lastMessageSignature = currentSignature;
 
-        if (messages.length > previousMessageCount) {
-          showNewMessageAlert();
-          const newMessages = messages.slice(previousMessageCount);
-          newMessages.forEach((msg) => {
-            const div = document.createElement("div");
-            div.classList.add("message");
+    messagesDiv.innerHTML = "";
 
-            const timeDiv = document.createElement("div");
-            timeDiv.classList.add("message-time");
-            timeDiv.textContent = `[${msg.time || "🕒"}]`;
+    messages.forEach((msg) => {
+      const div = document.createElement("div");
+      div.classList.add("message");
 
-            const textDiv = document.createElement("div");
-            textDiv.classList.add("message-text");
+      const textDiv = document.createElement("div");
+      textDiv.classList.add("message-text");
 
-            const lines = msg.text.split(/[,;\n]+/).map(line => line.trim()).filter(Boolean);
-            lines.forEach(line => {
-              const lineDiv = document.createElement("div");
-              lineDiv.textContent = line;
-              textDiv.appendChild(lineDiv);
-            });
+      msg.text.split(/[,;\n]+/)
+        .map(line => line.trim())
+        .filter(Boolean)
+        .forEach(line => {
+          const lineDiv = document.createElement("div");
+          lineDiv.textContent = line;
+          textDiv.appendChild(lineDiv);
+        });
 
-            div.appendChild(timeDiv);
-            div.appendChild(textDiv);
-            messagesDiv.appendChild(div);
-          });
-        }
+      div.appendChild(textDiv);
+      messagesDiv.appendChild(div);
+    });
 
-        previousMessageCount = messages.length;
-      } catch (err) {
-        console.error("❌ Failed to load messages", err);
-      }
-    }
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-    async function updateOnlineCount() {
-      try {
-        const res = await fetch(`${API_BASE}/online-users`);
-        const data = await res.json();
-        document.getElementById("online-count").textContent = data.online || 0;
-      } catch (err) {
-        console.error("❌ Failed to update online users", err);
-      }
-    }
+  } catch (err) {
+    console.error("Failed to load messages", err);
+  }
+}
 
-    // Refresh messages every 2s
-    setInterval(loadMessages, 2000);
-    loadMessages();
+function logout() {
+  localStorage.removeItem("isLoggedIn");
+  window.location.href = "login.html";
+}
 
-    // Refresh online counter every 2s
-    setInterval(updateOnlineCount, 2000);
-    updateOnlineCount();
-  </script>
+setInterval(loadMessages, 3000);
+loadMessages();
+</script>
+
 </body>
 </html>

@@ -1,31 +1,31 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Login</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="login-container">
-    <h2>Dashboard Login</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <button type="submit">Login</button>
-      <p id="loginError" class="error-message"></p>
-    </form>
+  <div class="login-wrapper">
+    <div class="login-container">
+      <h1 class="logo-text">DASHBOARD</h1>
+      <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+        <p id="loginError" class="error-message"></p>
+      </form>
+    </div>
   </div>
 
   <script>
-    document.getElementById("loginForm").addEventListener("submit", function (e) {
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
       e.preventDefault();
-
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      if (email === "admin@ward.com" && password === "Admin123") {
+      if (email === "admin@ward.com" && password === "Aa100200@") {
         localStorage.setItem("isLoggedIn", "true");
         window.location.href = "dashboard.html";
       } else {
